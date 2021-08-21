@@ -1,17 +1,32 @@
 #!/bin/python3
+#
+# Copyright © 2021 Ward Segers
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+import requests
+from requests import get
 from itertools import product
 from requests import get, patch, post
 from json import loads
 
+
 def api_get(url):
     return get(url, headers={'Authorization': f"Apikey {API_KEY}"})
+
+
 def api_patch(url, body):
     return patch(url, json=body, headers={'Authorization': f"Apikey {API_KEY}"})
+
+
 def api_post(url, body):
     return post(url, json=body, headers={'Authorization': f"Apikey {API_KEY}"})
 
-import requests
-from requests import get
 
 print("This application will add a bunch of wildcards to one mail address.")
 print("In order to start, please request an API key using the dashboard.")
@@ -64,7 +79,8 @@ domain_fqdn = selection['fqdn']
 # Email selection
 # https://api.gandi.net/docs/email/
 print("Fetching existing mailboxes...")
-api_response = api_get(f"https://api.gandi.net/v5/email/mailboxes/{domain_fqdn}")
+api_response = api_get(
+    f"https://api.gandi.net/v5/email/mailboxes/{domain_fqdn}")
 if api_response.status_code != 200:
     print("Something went wrong when fetching mailboxes.")
     exit(1)
@@ -87,16 +103,18 @@ if mail in mails:
 else:
     print("We couldn't find any mailbox. We'll create a new one.")
     print("Be sure there's some quota left to create a mailbox!")
-    password= None
+    password = None
     while password is None:
-        password = input("Please enter a password for the newly created mailbox (SHOWN HERE IN PLAINTEXT): ")
+        password = input(
+            "Please enter a password for the newly created mailbox (SHOWN HERE IN PLAINTEXT): ")
         if len(password) < 8:
             print("Password must be 8 characters long")
 
     uuid = None
 
 mail = f"{mail_alias}@{domain_fqdn}"
-print(f"All mail to an @{domain_fqdn} address (starting with 2 alphabetic characters) will be redirected to {mail}")
+print(
+    f"All mail to an @{domain_fqdn} address (starting with 2 alphabetic characters) will be redirected to {mail}")
 input("Press enter to apply.")
 
 # Permutations
@@ -112,19 +130,20 @@ if uuid is None:
         "login": mail_alias,
         "aliases": list(permstar)
     }
-    res = api_post(f"https://api.gandi.net/v5/email/mailboxes/{domain_fqdn}", data)
+    res = api_post(
+        f"https://api.gandi.net/v5/email/mailboxes/{domain_fqdn}", data)
     if res.status_code != 202:
         print(f"Something went wrong: {res.status_code}")
         print(res.text)
         exit(1)
 else:
     data = {"aliases": list(permstar)}
-    res = api_patch(f"https://api.gandi.net/v5/email/mailboxes/{domain_fqdn}/{uuid}", data)
+    res = api_patch(
+        f"https://api.gandi.net/v5/email/mailboxes/{domain_fqdn}/{uuid}", data)
     if res.status_code != 202:
         print(f"Something went wrong: {res.status_code}")
         print(res.text)
         exit(1)
-
 
 
 print()
